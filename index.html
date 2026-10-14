@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Colônia Ares-7</title>
+<meta name="description" content="Painel de controle da Colônia Ares-7, colônia humana fictícia em Marte.">
+
+<!-- Fontes: Space Grotesk (textos) e JetBrains Mono (números, relógios e terminal) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+
+<!-- Tailwind CSS (CDN) + configuração da paleta marciana -->
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          marte: {
+            laranja: '#F97316',
+            ferrugem: '#B45309',
+            telha: '#9A3412',
+            areia: '#FDBA74',
+            ciano: '#22D3EE',
+          },
+        },
+        fontFamily: {
+          sans: ['"Space Grotesk"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+          mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+        },
+      },
+    },
+  };
+</script>
+
+<!-- Estilos próprios (glassmorphism, animações, keyframes) -->
+<link rel="stylesheet" href="style.css">
+<!-- Chart.js (CDN) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+<a href="#conteudo" class="pular-link">Pular para o conteúdo</a>
+
+<!-- Fundo com poeira/estrelas -->
+<div class="ceu" aria-hidden="true"></div>
+
+<!-- Fundo escuro do menu no celular -->
+<div id="sobreposicao" class="sobreposicao" hidden></div>
+
+<!-- ===================== BARRA LATERAL ===================== -->
+<aside id="barra-lateral" class="barra-lateral" aria-label="Menu principal">
+  <div class="flex items-center gap-3 px-5 pt-6 pb-8">
+    <svg class="h-11 w-11 shrink-0" viewBox="0 0 48 48" role="img" aria-label="Logo da Colônia Ares-7">
+      <defs>
+        <radialGradient id="planeta" cx="35%" cy="30%" r="75%">
+          <stop offset="0%" stop-color="#FDBA74" />
+          <stop offset="55%" stop-color="#F97316" />
+          <stop offset="100%" stop-color="#9A3412" />
+        </radialGradient>
+      </defs>
+      <circle cx="24" cy="24" r="13" fill="url(#planeta)" />
+      <circle cx="19" cy="20" r="2.2" fill="#B45309" opacity=".7" />
+      <circle cx="28" cy="29" r="3" fill="#9A3412" opacity=".6" />
+      <ellipse cx="24" cy="24" rx="22" ry="7" fill="none" stroke="#22D3EE" stroke-width="1.4" opacity=".8" transform="rotate(-18 24 24)" />
+      <circle cx="44" cy="17" r="2" fill="#22D3EE" />
+    </svg>
+    <div class="leading-tight">
+      <p class="text-lg font-bold tracking-wide text-orange-50">ARES-7</p>
+      <p class="text-xs uppercase tracking-[0.2em] text-marte-areia/70">Cratera Jezero</p>
+    </div>
+    <button id="btn-fechar-menu" class="ml-auto lg:hidden btn-icone" aria-label="Fechar menu">
+      <svg viewBox="0 0 24 24" class="h-5 w-5" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+    </button>
+  </div>
+
+  <nav aria-label="Seções do painel">
+    <ul class="flex flex-col gap-1 px-3">
+      <li>
+        <a href="#visao-geral" class="link-nav ativo" data-secao="visao-geral">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v4h-7zM13 10h7v10h-7zM4 13h7v7H4z" /></svg>
+          Visão geral
+        </a>
+      </li>
+      <li>
+        <a href="#recursos" class="link-nav" data-secao="recursos">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7z" /></svg>
+          Recursos
+        </a>
+      </li>
+      <li>
+        <a href="#tripulacao" class="link-nav" data-secao="tripulacao">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c.6-3.6 3.3-6 6.5-6s5.9 2.4 6.5 6" /><circle cx="17" cy="9" r="2.5" /><path d="M16.5 14.2c2.6.3 4.4 2.4 5 5.3" /></svg>
+          Tripulação
+        </a>
+      </li>
+      <li>
+        <a href="#clima" class="link-nav" data-secao="clima">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h11a3 3 0 1 0-3-3M3 14h15a3 3 0 1 1-3 3M3 19h7" /></svg>
+          Clima
+        </a>
+      </li>
+      <li>
+        <a href="#comunicacoes" class="link-nav" data-secao="comunicacoes">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 13v8M8 21h8" /><circle cx="12" cy="11" r="2" /><path d="M7.8 6.8a6 6 0 0 0 0 8.4M16.2 6.8a6 6 0 0 1 0 8.4M5 4a10 10 0 0 0 0 14M19 4a10 10 0 0 1 0 14" /></svg>
+          Comunicações
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <div class="mt-auto p-4">
+    <div class="vidro rounded-2xl p-4 text-sm">
+      <p class="text-xs uppercase tracking-[0.18em] text-marte-areia/70">Missão</p>
+      <p class="mt-1 font-semibold text-orange-50">Fase III · Expansão</p>
+      <p class="mt-2 text-stone-400">Próxima nave de carga</p>
+      <p class="font-mono text-marte-ciano"><span id="carga-sols">142</span> sols</p>
+    </div>
+  </div>
+</aside>
+
+<!-- ===================== ÁREA PRINCIPAL ===================== -->
+<div class="lg:pl-64">
+
+  <!-- Cabeçalho -->
+  <header class="cabecalho">
+    <div class="gutter flex flex-wrap items-center gap-x-6 gap-y-4 py-4">
+      <button id="btn-abrir-menu" class="btn-icone lg:hidden" aria-label="Abrir menu" aria-controls="barra-lateral" aria-expanded="false">
+        <svg viewBox="0 0 24 24" class="h-6 w-6" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+      </button>
+
+      <div class="min-w-0">
+        <h1 class="text-2xl font-bold tracking-tight text-orange-50 sm:text-3xl">Colônia Ares-7</h1>
+        <p class="mt-1 flex items-center gap-2 text-sm text-emerald-300" role="status">
+          <span class="ponto-pulsante" aria-hidden="true"></span>
+          <span id="status-geral">Sistemas operacionais</span>
+        </p>
+      </div>
+
+      <!-- Relógios Terra / Marte -->
+      <div class="ml-auto flex w-full flex-wrap gap-3 sm:w-auto" aria-label="Relógios">
+        <div class="relogio vidro">
+          <p class="relogio-rotulo">
+            <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            Terra · UTC
+          </p>
+          <p id="relogio-terra" class="relogio-hora text-marte-ciano">--:--:--</p>
+          <p id="data-terra" class="relogio-sub">--</p>
+        </div>
+        <div class="relogio vidro">
+          <p class="relogio-rotulo">
+            <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="currentColor" opacity=".35"/><circle cx="9" cy="10" r="2" fill="currentColor"/><circle cx="15" cy="15" r="1.5" fill="currentColor"/></svg>
+            Marte · MTC
+          </p>
+          <p id="relogio-marte" class="relogio-hora text-marte-laranja">--:--:--</p>
+          <p class="relogio-sub">Sol <span id="numero-sol" class="text-marte-areia">-----</span></p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="conteudo" class="gutter flex flex-col gap-10 pb-16 pt-6">
+
+    <!-- ========== VISÃO GERAL: cards de indicadores ========== -->
+    <section id="visao-geral" aria-labelledby="titulo-visao" class="secao">
+      <h2 id="titulo-visao" class="titulo-secao">Visão geral</h2>
+      <div class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+
+        <article class="card vidro" id="card-oxigenio">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h3 class="card-rotulo">Oxigênio</h3>
+              <p class="card-sub">Reserva atmosférica</p>
+            </div>
+            <span class="card-icone text-marte-ciano bg-cyan-400/10" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><circle cx="9" cy="13" r="5"/><circle cx="17" cy="8" r="3"/><text x="9" y="15.5" font-size="6" text-anchor="middle" fill="currentColor" stroke="none" font-family="JetBrains Mono">O₂</text></svg>
+            </span>
+          </div>
+          <p class="mt-4 flex items-baseline gap-1.5">
+            <span class="card-valor" data-valor>94,2</span><span class="card-unidade">%</span>
+          </p>
+          <p class="card-variacao" data-variacao>+0,0% na última hora</p>
+          <div class="barra" role="progressbar" aria-label="Nível de oxigênio" aria-valuemin="0" aria-valuemax="100" aria-valuenow="94"><div class="barra-preenchimento bg-marte-ciano" data-barra></div></div>
+          <p class="card-rodape">Mínimo seguro: <span class="font-mono">85%</span></p>
+        </article>
+
+        <article class="card vidro" id="card-energia">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h3 class="card-rotulo">Energia solar</h3>
+              <p class="card-sub" data-sub>Geração no sol atual</p>
+            </div>
+            <span class="card-icone text-marte-laranja bg-orange-500/10" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+            </span>
+          </div>
+          <p class="mt-4 flex items-baseline gap-1.5">
+            <span class="card-valor" data-valor>1.842</span><span class="card-unidade">kWh</span>
+          </p>
+          <p class="card-variacao" data-variacao>+0,0% na última hora</p>
+          <div class="barra" role="progressbar" aria-label="Geração em relação à capacidade" aria-valuemin="0" aria-valuemax="100" aria-valuenow="77"><div class="barra-preenchimento bg-marte-laranja" data-barra></div></div>
+          <p class="card-rodape">Capacidade: <span class="font-mono">2.400 kWh</span></p>
+        </article>
+
+        <article class="card vidro" id="card-agua">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h3 class="card-rotulo">Água</h3>
+              <p class="card-sub">Reservatórios + gelo extraído</p>
+            </div>
+            <span class="card-icone text-sky-300 bg-sky-400/10" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>
+            </span>
+          </div>
+          <p class="mt-4 flex items-baseline gap-1.5">
+            <span class="card-valor" data-valor>128.450</span><span class="card-unidade">litros</span>
+          </p>
+          <p class="card-variacao" data-variacao>+0,0% na última hora</p>
+          <div class="barra" role="progressbar" aria-label="Volume dos reservatórios" aria-valuemin="0" aria-valuemax="100" aria-valuenow="86"><div class="barra-preenchimento bg-sky-300" data-barra></div></div>
+          <p class="card-rodape">Capacidade: <span class="font-mono">150.000 L</span></p>
+        </article>
+
+        <article class="card vidro" id="card-populacao">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h3 class="card-rotulo">População</h3>
+              <p class="card-sub">Habitantes na colônia</p>
+            </div>
+            <span class="card-icone text-marte-areia bg-amber-300/10" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M3 20V11l9-7 9 7v9"/><path d="M9 20v-6h6v6"/></svg>
+            </span>
+          </div>
+          <p class="mt-4 flex items-baseline gap-1.5">
+            <span class="card-valor" data-valor>247</span><span class="card-unidade">habitantes</span>
+          </p>
+          <p class="card-variacao" data-variacao>+0,0% na última hora</p>
+          <div class="barra" role="progressbar" aria-label="Ocupação dos módulos habitacionais" aria-valuemin="0" aria-valuemax="100" aria-valuenow="82"><div class="barra-preenchimento bg-marte-areia" data-barra></div></div>
+          <p class="card-rodape">Capacidade dos módulos: <span class="font-mono">300</span></p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ========== RECURSOS: gráficos ========== -->
+    <section id="recursos" aria-labelledby="titulo-recursos" class="secao">
+      <h2 id="titulo-recursos" class="titulo-secao">Recursos</h2>
+      <div class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+
+        <article class="card vidro md:col-span-2 xl:col-span-3">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h3 class="text-lg font-semibold text-orange-50">Consumo nas últimas 24 horas</h3>
+              <p class="text-sm text-stone-400">Monitor em tempo real · novo ponto a cada 3 s</p>
+            </div>
+            <span class="selo-ao-vivo"><span class="ponto-ao-vivo" aria-hidden="true"></span>AO VIVO</span>
+          </div>
+          <div class="relative mt-4 h-72 xl:h-80">
+            <canvas id="grafico-consumo" role="img" aria-label="Gráfico de linha do consumo de oxigênio, energia e água nas últimas 24 horas"></canvas>
+          </div>
+        </article>
+
+        <article class="card vidro md:col-span-2 xl:col-span-1">
+          <h3 class="text-lg font-semibold text-orange-50">Energia por setor</h3>
+          <p class="text-sm text-stone-400">Distribuição do consumo atual</p>
+          <div class="relative mx-auto mt-4 h-56 max-w-[260px]">
+            <canvas id="grafico-setores" role="img" aria-label="Gráfico de rosca da distribuição do consumo de energia por setor"></canvas>
+            <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+              <span class="text-xs uppercase tracking-[0.18em] text-stone-400">Total</span>
+              <span id="total-setores" class="font-mono text-2xl font-bold text-orange-50">—</span>
+              <span class="font-mono text-xs text-stone-400">kWh/sol</span>
+            </div>
+          </div>
+          <ul id="legenda-setores" class="mt-4 flex flex-col gap-1.5 text-sm"></ul>
+        </article>
+      </div>
+    </section>
+
+    <!-- ========== TRIPULAÇÃO ========== -->
+    <section id="tripulacao" aria-labelledby="titulo-tripulacao" class="secao">
+      <h2 id="titulo-tripulacao" class="titulo-secao">Tripulação</h2>
+      <div class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <article class="card vidro md:col-span-2 xl:col-span-4">
+          <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div role="group" aria-label="Filtrar por status" class="flex flex-wrap gap-2" id="filtros-status">
+              <button class="filtro ativo" data-status="todos" aria-pressed="true">Todos <span class="filtro-contagem" data-contagem="todos">0</span></button>
+              <button class="filtro" data-status="online" aria-pressed="false"><span class="bolinha bg-emerald-400" aria-hidden="true"></span>Online <span class="filtro-contagem" data-contagem="online">0</span></button>
+              <button class="filtro" data-status="missao" aria-pressed="false"><span class="bolinha bg-marte-laranja" aria-hidden="true"></span>Em missão <span class="filtro-contagem" data-contagem="missao">0</span></button>
+              <button class="filtro" data-status="dormindo" aria-pressed="false"><span class="bolinha bg-indigo-300" aria-hidden="true"></span>Dormindo <span class="filtro-contagem" data-contagem="dormindo">0</span></button>
+            </div>
+            <div class="relative w-full lg:w-72">
+              <label for="busca-tripulante" class="sr-only">Buscar tripulante por nome</label>
+              <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              <input id="busca-tripulante" type="search" placeholder="Buscar por nome…" autocomplete="off" class="campo-busca">
+            </div>
+          </div>
+
+          <div class="tabela-rolagem mt-5">
+            <table class="tabela-tripulacao">
+              <caption class="sr-only">Lista da tripulação com função, setor e status</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Tripulante</th>
+                  <th scope="col">Função</th>
+                  <th scope="col">Setor</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody id="lista-tripulacao"></tbody>
+            </table>
+          </div>
+          <p id="sem-resultados" class="py-8 text-center text-stone-400" hidden>Nenhum tripulante encontrado. Tente outro nome ou status.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ========== CLIMA + COMUNICAÇÕES ========== -->
+    <div class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+
+      <section id="clima" aria-labelledby="titulo-clima" class="secao md:col-span-2 xl:col-span-2">
+        <h2 id="titulo-clima" class="titulo-secao">Clima</h2>
+        <article class="card vidro h-full">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h3 class="text-lg font-semibold text-orange-50">Estação meteorológica externa</h3>
+              <p class="text-sm text-stone-400">Setor norte · 4,5 m acima do solo</p>
+            </div>
+            <span id="selo-clima" class="selo-clima">Céu limpo</span>
+          </div>
+          <dl class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div class="leitura">
+              <dt>Temperatura</dt>
+              <dd><span id="clima-temp" class="font-mono">-63</span><small>°C</small></dd>
+            </div>
+            <div class="leitura">
+              <dt>Pressão</dt>
+              <dd><span id="clima-pressao" class="font-mono">6,10</span><small>mbar</small></dd>
+            </div>
+            <div class="leitura">
+              <dt>Vento</dt>
+              <dd><span id="clima-vento" class="font-mono">18</span><small>km/h</small></dd>
+            </div>
+            <div class="leitura">
+              <dt>Opacidade τ</dt>
+              <dd><span id="clima-tau" class="font-mono">0,52</span><small>poeira</small></dd>
+            </div>
+          </dl>
+          <p class="mt-4 text-sm text-stone-400">A opacidade τ mede quanta poeira há na atmosfera. Acima de <span class="font-mono text-marte-areia">1,0</span>, a captação dos painéis solares cai de forma acentuada.</p>
+        </article>
+      </section>
+
+      <section id="comunicacoes" aria-labelledby="titulo-comunicacoes" class="secao md:col-span-2 xl:col-span-2">
+        <h2 id="titulo-comunicacoes" class="titulo-secao">Comunicações</h2>
+        <article class="card vidro h-full">
+          <dl class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div class="leitura">
+              <dt>Atraso do sinal</dt>
+              <dd class="font-mono text-marte-ciano" id="com-atraso">12 min 41 s</dd>
+            </div>
+            <div class="leitura">
+              <dt>Próxima janela DSN</dt>
+              <dd class="font-mono text-marte-areia" id="com-janela">00:00</dd>
+            </div>
+            <div class="leitura">
+              <dt>Taxa de dados</dt>
+              <dd><span id="com-taxa" class="font-mono">2,1</span><small>Mbps</small></dd>
+            </div>
+          </dl>
+
+          <div class="terminal mt-4">
+            <div class="terminal-barra">
+              <span class="h-2.5 w-2.5 rounded-full bg-red-400/80" aria-hidden="true"></span>
+              <span class="h-2.5 w-2.5 rounded-full bg-amber-300/80" aria-hidden="true"></span>
+              <span class="h-2.5 w-2.5 rounded-full bg-emerald-400/80" aria-hidden="true"></span>
+              <span class="ml-2">registro-de-eventos.log</span>
+            </div>
+            <ol id="registro-eventos" class="terminal-corpo" aria-live="polite" aria-label="Registro de eventos"></ol>
+          </div>
+        </article>
+      </section>
+    </div>
+
+    <footer class="text-center text-xs text-stone-500">
+      Colônia Ares-7 · dados fictícios gerados localmente para demonstração
+    </footer>
+  </main>
+</div>
+
+<!-- ===================== ALERTA DE TEMPESTADE ===================== -->
+<div id="alerta-tempestade" class="alerta" role="alert" hidden>
+  <div class="flex items-start gap-3">
+    <span class="alerta-icone" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5"/></svg>
+    </span>
+    <div class="min-w-0 flex-1">
+      <p class="text-sm font-bold uppercase tracking-[0.14em] text-orange-300">Alerta meteorológico</p>
+      <p class="mt-1 text-orange-50">Tempestade de areia se aproximando — setor norte, chegada estimada em 14 min</p>
+      <p class="mt-2 font-mono text-xs text-orange-200/80">Painéis solares em modo de proteção</p>
+    </div>
+    <button id="btn-dispensar-alerta" class="btn-icone shrink-0" aria-label="Dispensar alerta">
+      <svg viewBox="0 0 24 24" class="h-5 w-5" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+    </button>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
